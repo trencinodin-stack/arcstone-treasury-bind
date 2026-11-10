@@ -1,5 +1,5 @@
 //! Adversarial Conformance Test Corpus (TC-BIND-01 through TC-BIND-10)
-//! Grounded in ARC-SPEC-2026-BIND-01 (REV-11) Section 8.
+//! Normative verification suite grounded in ARC-SPEC-2026-BIND-01 (REV-11) Section 8.
 
 use arcstone_treasury_bind::constants::*;
 use arcstone_treasury_bind::error::BindingError;
@@ -94,6 +94,25 @@ fn test_tc_bind_02_toctou_payload_substitution() {
 }
 
 #[test]
+fn test_tc_bind_03_zero_byte_trailing_payload_corruption() {
+    let (buf, expected_pk, expected_tok, epoch, current_time) = create_valid_frame_buffer();
+    let frame = DecodedFrame::admit(
+        &buf.0,
+        current_time,
+        epoch,
+        |pk, tok, ledger| pk == &expected_pk && tok == &expected_tok && ledger == 9999,
+        |_pk, _transcript, _sig| true,
+    )
+    .unwrap();
+
+    // Single-byte alteration at end of digest fails constant-time comparison
+    let mut corrupted_digest = [0xAAu8; 32];
+    corrupted_digest[31] = 0xAB;
+    let commit_res = frame.verify_payload_binding(&corrupted_digest);
+    assert_eq!(commit_res, Err(BindingError::DigestMismatch));
+}
+
+#[test]
 fn test_tc_bind_04_stale_epoch_replay() {
     let (buf, expected_pk, expected_tok, epoch, current_time) = create_valid_frame_buffer();
     let stale_epoch = epoch + 1;
@@ -105,6 +124,35 @@ fn test_tc_bind_04_stale_epoch_replay() {
         |_pk, _transcript, _sig| true,
     );
     assert_eq!(res, Err(BindingError::EpochExpired));
+}
+
+#[test]
+fn test_tc_bind_05_entitlement_key_revocation() {
+    let (buf, _expected_pk, _expected_tok, epoch, current_time) = create_valid_frame_buffer();
+    let res = DecodedFrame::admit(
+        &buf.0,
+        current_time,
+        epoch,
+        |_pk, _tok, _ledger| false, // Key revocation or missing from registry
+        |_pk, _transcript, _sig| true,
+    );
+    assert_eq!(res, Err(BindingError::KeyUnauthorized));
+}
+
+#[test]
+fn test_tc_bind_06_non_canonical_currency_code_padding() {
+    let (mut buf, expected_pk, expected_tok, epoch, current_time) = create_valid_frame_buffer();
+    // Non-zero byte placed in reserved currency padding [0x00E3..0x0100]
+    buf.0[0xE5] = 0x01;
+
+    let res = DecodedFrame::admit(
+        &buf.0,
+        current_time,
+        epoch,
+        |pk, tok, ledger| pk == &expected_pk && tok == &expected_tok && ledger == 9999,
+        |_pk, _transcript, _sig| true,
+    );
+    assert_eq!(res, Err(BindingError::InvalidCurrencyPadding));
 }
 
 #[test]
@@ -121,10 +169,37 @@ fn test_tc_bind_07_economic_field_tampering() {
 }
 
 #[test]
+fn test_tc_bind_08_inverted_timestamp_interval() {
+    let (mut buf, expected_pk, expected_tok, epoch, current_time) = create_valid_frame_buffer();
+    // Inverted timestamp window: not_before (30_000) > not_after (20_000)
+    let invalid_not_before = 30_000u64;
+    buf.0[0x10..0x18].copy_from_slice(&invalid_not_before.to_le_bytes());
+
+    let res = DecodedFrame::admit(
+        &buf.0,
+        current_time,
+        epoch,
+        |pk, tok, ledger| pk == &expected_pk && tok == &expected_tok && ledger == 9999,
+        |_pk, _transcript, _sig| true,
+    );
+    assert_eq!(res, Err(BindingError::InvalidTimestampRange));
+}
+
+#[test]
 fn test_tc_bind_09_pre_dispatch_storage_fault() {
     let state = TreasuryState::Admitted;
     let faulted_state = state.on_pre_dispatch_fault().unwrap();
     assert_eq!(faulted_state, TreasuryState::Denied);
+}
+
+#[test]
+fn test_tc_bind_10_clearing_timeout_and_manual_dwell_lock() {
+    let state = TreasuryState::DispatchReserved;
+    let unk_state = state.on_transport_timeout().unwrap();
+    assert_eq!(unk_state, TreasuryState::UnknownReconcile { locked_manual: false });
+
+    let manual_locked = unk_state.on_manual_lock_engage().unwrap();
+    assert_eq!(manual_locked, TreasuryState::UnknownReconcile { locked_manual: true });
 }
 
 #[test]
@@ -134,7 +209,7 @@ fn test_permit_wire_format_exact_96_bytes() {
     assert_eq!(bytes.len(), 96);
     let parsed = ExecutionPermit::from_bytes(&bytes);
 
-    // Copy packed fields to local variables to prevent unaligned reference creation (E0793)
+    // Read packed fields into local variables to avoid creating unaligned references
     let lease_id = parsed.epoch_lease_id;
     let not_after = parsed.valid_not_after_ns;
     assert_eq!(lease_id, 42);
