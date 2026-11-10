@@ -1,0 +1,45 @@
+cff-version: 1.2.0
+message: "If you use this reference implementation or cite the underlying protocol, please cite it as below."
+title: "Deterministic Financial Admission: Content-Addressable Binding, TOCTOU Elimination, and Operational Risk Invariants for Institutional Treasury Rails"
+version: 0.1.0
+doi: 10.5281/zenodo.24119501
+date-released: "2026-11-10"
+repository-code: "https://github.com/trencinodin-stack/arcstone-treasury-bind"
+url: "https://doi.org/10.5281/zenodo.24119501"
+license: "MIT OR Apache-2.0"
+authors:
+  - family-names: Tuohy
+    given-names: Jesse
+    orcid: "https://orcid.org/0009-0008-4661-1540"
+    affiliation: "Arcstone Adaptive Science Systems, Inc."
+keywords:
+  - "financial-infrastructure"
+  - "treasury-rails"
+  - "toctou-elimination"
+  - "deterministic-admission"
+  - "zero-heap"
+  - "no-std"
+  - "rust"
+  - "iso-20022"
+  - "content-addressable-storage"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.24119501"
+    description: "Normative Specification Record (Zenodo)"
+  - type: other
+    value: "urn:arcstone:spec:2026:bind:01"
+    description: "Arcstone Specification URN"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Tuohy
+      given-names: Jesse
+      orcid: "https://orcid.org/0009-0008-4661-1540"
+      affiliation: "Arcstone Adaptive Science Systems, Inc."
+  title: "Deterministic Financial Admission: Content-Addressable Binding, TOCTOU Elimination, and Operational Risk Invariants for Institutional Treasury Rails"
+  year: 2026
+  month: 11
+  doi: "10.5281/zenodo.24119501"
+  url: "https://doi.org/10.5281/zenodo.24119501"
+  institution:
+    name: "Arcstone Adaptive Science Systems, Inc."
