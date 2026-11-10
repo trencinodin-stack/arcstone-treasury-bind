@@ -1,0 +1,26 @@
+name: Regulatory & Supervisory Alignment
+description: Track OCC Bulletin 2026-13 / Federal Reserve SR 26-2 rule-based criteria updates
+title: "[REGULATORY]: "
+labels: ["compliance", "supervisory-mapping"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Track and align binding invariants with Federal Reserve SR 26-2 and OCC Bulletin 2026-13 non-model decision parameters.
+  - type: dropdown
+    id: supervisory-regime
+    attributes:
+      label: Supervisory Rail / Circular
+      options:
+        - "OCC Bulletin 2026-13 (Deterministic Treasury Rails)"
+        - "Federal Reserve SR 26-2 (Algorithmic Financial Operations)"
+        - "ISO 20022 Clearing Finality Rulebook"
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-alignment
+    attributes:
+      label: Clarification / Invariant Requirement
+      description: Detail the statutory or regulatory parameter requiring repository verification.
+    validations:
+      required: true
