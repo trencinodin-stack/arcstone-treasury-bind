@@ -1,0 +1,43 @@
+name: Conformance Failure Report
+description: Report a cryptographic, memory envelope, or deterministic gate violation against REV-11
+title: "[CONFORMANCE]: "
+labels: ["conformance", "spec-violation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report an observed deviation from the normative invariants defined in **ARC-SPEC-2026-BIND-01 (REV-11)** (DOI: 10.5281/zenodo.24119501).
+  - type: dropdown
+    id: test-case
+    attributes:
+      label: Adversarial Corpus Vector
+      description: Select the relevant test scenario or subsystem
+      options:
+        - "TC-BIND-01: Nominal Ingress & ACSC Transition"
+        - "TC-BIND-02: TOCTOU Payload Substitution"
+        - "TC-BIND-03: Single-Bit Trailing Payload Tampering"
+        - "TC-BIND-04: Stale Epoch / Time Replay"
+        - "TC-BIND-05: Unauthorized / Revoked Entitlement Key"
+        - "TC-BIND-06: Non-Canonical Currency Field Padding"
+        - "TC-BIND-07: Economic Intent Field Tampering"
+        - "TC-BIND-08: Inverted Validity Window Interval"
+        - "TC-BIND-09: Pre-Dispatch Storage Fault"
+        - "TC-BIND-10: Transport Timeout & Dwell Lockout"
+        - "Other Memory or Zero-Heap Invariant"
+    validations:
+      required: true
+  - type: textarea
+    id: observed-behavior
+    attributes:
+      label: Observed Behavior
+      description: Describe how the implementation deviated from the constant-time or state invariants.
+      placeholder: "e.g., Kernel admitted buffer with non-zero padding at offset 0xE5..."
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Architecture / Target
+      placeholder: "e.g., x86_64, thumbv7em-none-eabihf (Cortex-M4), or QEMU"
+    validations:
+      required: true
