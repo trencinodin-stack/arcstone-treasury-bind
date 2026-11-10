@@ -15,7 +15,7 @@ fn create_valid_frame_buffer() -> (AlignedBuffer, [u8; 32], [u8; 32], u64, u64) 
     buf.0[0..4].copy_from_slice(&PROTOCOL_MAGIC);
     buf.0[4..6].copy_from_slice(&1u16.to_le_bytes()); // Schema v1
     buf.0[6..8].copy_from_slice(&MIME_ISO_20022_XML.to_le_bytes());
-    
+
     let epoch = 100u64;
     buf.0[8..16].copy_from_slice(&epoch.to_le_bytes());
 
@@ -85,7 +85,8 @@ fn test_tc_bind_02_toctou_payload_substitution() {
         epoch,
         |pk, tok, ledger| pk == &expected_pk && tok == &expected_tok && ledger == 9999,
         |_pk, _transcript, _sig| true,
-    ).unwrap();
+    )
+    .unwrap();
 
     let substituted_digest = [0xBBu8; 32];
     let commit_res = frame.verify_payload_binding(&substituted_digest);
@@ -132,6 +133,10 @@ fn test_permit_wire_format_exact_96_bytes() {
     let bytes = permit.to_bytes();
     assert_eq!(bytes.len(), 96);
     let parsed = ExecutionPermit::from_bytes(&bytes);
-    assert_eq!(parsed.epoch_lease_id, 42);
-    assert_eq!(parsed.valid_not_after_ns, 100_000);
+
+    // Copy packed fields to local variables to prevent unaligned reference creation (E0793)
+    let lease_id = parsed.epoch_lease_id;
+    let not_after = parsed.valid_not_after_ns;
+    assert_eq!(lease_id, 42);
+    assert_eq!(not_after, 100_000);
 }
