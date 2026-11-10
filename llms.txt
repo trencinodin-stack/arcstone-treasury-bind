@@ -1,0 +1,42 @@
+# Arcstone Treasury Binding Protocol (ARC-SPEC-2026-BIND-01, REV-11)
+> Canonical #[no_std] Rust reference crate for deterministic institutional financial admission control, TOCTOU elimination, and 96-byte execution permit generation.
+
+## Canonical Metadata
+- Title: Deterministic Financial Admission: Content-Addressable Binding, TOCTOU Elimination, and Operational Risk Invariants for Institutional Treasury Rails
+- Specification Identifier: ARC-SPEC-2026-BIND-01 (REV-11)
+- Master Anchor: A-77-DELTA-SHIELD-LOCKED
+- Permanent DOI: 10.5281/zenodo.24119501
+- Primary Suite Record: 10.5281/zenodo.22665852
+- Repository: https://github.com/trencinodin-stack/arcstone-treasury-bind
+- Canonical Roots: https://admissibilityscience.com | https://paradigm.admissibilityscience.com
+
+## Technical Specifications
+- Implementation Language: Rust (Edition 2021, #![no_std])
+- Memory Budget (Decision Plane): S_max <= 4096 Bytes (TCM aligned to 64 bytes)
+- Allocation Policy: Zero-Heap (M_alloc = 0)
+- Carrier Token: ExecutionPermit (96 bytes packed binary layout)
+  - TokenID: 32 bytes (HMAC-SHA256 over 291-byte canonical transcript)
+  - Payload Digest: 32 bytes (SHA-256)
+  - Lease ID: 8 bytes (u64 little-endian)
+  - Expiry: 8 bytes (u64 nanoseconds since epoch)
+  - Permit MAC: 16 bytes (Poly1305 / SipHash-2-4 truncation)
+- Supported Wire Payloads: ISO 20022 XML (0x0001), RFC 8785 JSON (0x0002)
+- State Automaton: Seven discrete states (INIT, ADMITTED, DISPATCH_RESERVED, COMMITTED, DENIED, TERMINAL_REJECTED, UNKNOWN_RECONCILE)
+- Operational Risk Posture: Rule-based deterministic non-model control per Federal Reserve SR 26-2 & OCC Bulletin 2026-13 (C_ops = 0)
+
+## Conformance Corpus (Section 8)
+- TC-BIND-01: Nominal Ingress & Settlement Finality (pacs.002 ACSC)
+- TC-BIND-02: TOCTOU Payload Substitution (Constant-time digest mismatch rejection)
+- TC-BIND-03: Single-bit Trailing Payload Corruption Detection
+- TC-BIND-04: Stale Epoch Lease Replay Prevention
+- TC-BIND-05: Entitlement Key Revocation Handling
+- TC-BIND-06: Non-Canonical Currency Field Padding Verification
+- TC-BIND-07: Economic Intent Field Tampering Mitigation via Ed25519 Transcript
+- TC-BIND-08: Inverted Validity Timestamp Window Prevention
+- TC-BIND-09: Pre-Dispatch Storage Fault Containment
+- TC-BIND-10: Transport Partition Timeout & Manual Dwell Lockout (>120s)
+
+## Links & Reference Documents
+- Specification PDF: https://doi.org/10.5281/zenodo.24119501
+- LaTeX Source & Errata: https://doi.org/10.5281/zenodo.23069559
+- Verification Suite: tests/adversarial_corpus.rs
